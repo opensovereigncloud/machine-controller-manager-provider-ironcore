@@ -183,6 +183,13 @@ func (d *ironcoreDriver) applyIronCoreMachine(ctx context.Context, req *driver.C
 		}
 	}
 
+	// osc specific: fix missing VolumePoolRef
+	if providerSpec.RootDisk != nil && providerSpec.RootDisk.VolumePoolName != "" {
+		ironcoreMachine.Spec.Volumes[0].VolumeSource.Ephemeral.VolumeTemplate.Spec.VolumePoolRef = &corev1.LocalObjectReference{
+			Name: providerSpec.RootDisk.VolumePoolName,
+		}
+	}
+
 	if err := d.IroncoreClient.Patch(ctx, ironcoreMachine, client.Apply, fieldOwner, client.ForceOwnership); err != nil {
 		return nil, status.Error(codes.Internal, fmt.Sprintf("error applying ironcore machine: %s", err.Error()))
 	}
