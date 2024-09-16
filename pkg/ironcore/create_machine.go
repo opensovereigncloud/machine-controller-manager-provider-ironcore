@@ -12,11 +12,10 @@ import (
 	"github.com/gardener/machine-controller-manager/pkg/util/provider/driver"
 	"github.com/gardener/machine-controller-manager/pkg/util/provider/machinecodes/codes"
 	"github.com/gardener/machine-controller-manager/pkg/util/provider/machinecodes/status"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/validation/field"
-	"k8s.io/klog"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	apiv1alpha1 "github.com/ironcore-dev/machine-controller-manager-provider-ironcore/pkg/api/v1alpha1"
+	"github.com/ironcore-dev/machine-controller-manager-provider-ironcore/pkg/api/validation"
+	"github.com/ironcore-dev/machine-controller-manager-provider-ironcore/pkg/ignition"
 
 	"github.com/ironcore-dev/ironcore/api/common/v1alpha1"
 	computev1alpha1 "github.com/ironcore-dev/ironcore/api/compute/v1alpha1"
@@ -24,9 +23,11 @@ import (
 	ipamv1alpha1 "github.com/ironcore-dev/ironcore/api/ipam/v1alpha1"
 	networkingv1alpha1 "github.com/ironcore-dev/ironcore/api/networking/v1alpha1"
 	storagev1alpha1 "github.com/ironcore-dev/ironcore/api/storage/v1alpha1"
-	apiv1alpha1 "github.com/ironcore-dev/machine-controller-manager-provider-ironcore/pkg/api/v1alpha1"
-	"github.com/ironcore-dev/machine-controller-manager-provider-ironcore/pkg/api/validation"
-	"github.com/ironcore-dev/machine-controller-manager-provider-ironcore/pkg/ignition"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
+	"k8s.io/klog"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // CreateMachine handles a machine creation request
@@ -180,6 +181,12 @@ func (d *ironcoreDriver) applyIronCoreMachine(ctx context.Context, req *driver.C
 					},
 				},
 			},
+		}
+
+		if providerSpec.RootDisk != nil && providerSpec.RootDisk.VolumePoolName != "" {
+			ironcoreMachine.Spec.Volumes[0].VolumeSource.Ephemeral.VolumeTemplate.Spec.VolumePoolRef = &corev1.LocalObjectReference{
+				Name: providerSpec.RootDisk.VolumePoolName,
+			}
 		}
 	}
 
