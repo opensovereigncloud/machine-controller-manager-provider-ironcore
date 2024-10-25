@@ -4,6 +4,8 @@ CONTROLLER_IMG ?= controller:latest
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.29.0
 
+CONTAINER_TOOL ?= podman
+
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
 GOBIN=$(shell go env GOPATH)/bin
@@ -76,11 +78,11 @@ run: fmt vet ## Run a machine controller from your host.
 
 .PHONY: docker-build
 docker-build: test ## Build docker image with the machine controller.
-	docker build -t ${CONTROLLER_IMG} .
+	$(CONTAINER_TOOL) build -t ${CONTROLLER_IMG} .
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the machine controller.
-	docker push ${CONTROLLER_IMG}
+	$(CONTAINER_TOOL) push ${CONTROLLER_IMG}
 
 .PHONY: docs
 docs: gen-crd-api-reference-docs ## Run go generate to generate API reference documentation.
